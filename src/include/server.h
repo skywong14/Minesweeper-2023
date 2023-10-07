@@ -2,7 +2,9 @@
 #define SERVER_H
 
 #include <cstdlib>
+#include <queue>
 #include <iostream>
+#include <cstring>
 
 /*
  * You may need to define some global variables for the information of the game map here.
@@ -13,6 +15,17 @@
 int rows; // The count of rows of the game map
 int columns;  // The count of columns of the game map
 int game_state; // The state of the game, 0 for continuing, 1 for winning, -1 for losing
+
+struct Point{
+  int x=-1,y=-1;
+};
+struct GRID{
+  int order=0,state=-1,num=0;
+  int vis=0;
+}mp[100][100];  //state: -1:barrier 0:ok 1:mines 2:visited
+int adjacent_x[9],adjacent_y[9];
+int mine_num;
+int visit_count,step_count;
 
 /**
  * @brief The definition of function InitMap()
@@ -26,9 +39,42 @@ int game_state; // The state of the game, 0 for continuing, 1 for winning, -1 fo
  * where X stands for a mine block and . stands for a normal block. After executing this function, your game map would
  * be initialized, with all the blocks unvisited.
  */
+void init_adjacent(){
+  adjacent_x[1]=-1;adjacent_x[2]=-1;adjacent_x[3]=-1;adjacent_x[4]=0;
+  adjacent_x[5]=0;adjacent_x[6]=1;adjacent_x[7]=1;adjacent_x[8]=1;
+  adjacent_y[1]=-1;adjacent_y[2]=0;adjacent_y[3]=1;adjacent_y[4]=-1;
+  adjacent_y[5]=1;adjacent_y[6]=-1;adjacent_y[7]=0;adjacent_y[8]=1;
+  return;
+}
+int calc_mines(int pos_x,int pos_y){
+  int tmp=0;
+  for (int i=1;i<=8;i++)
+    if (mp[pos_x+adjacent_x[i]][pos_y+adjacent_y[i]].state==1)
+      tmp++;
+  return tmp;
+}
 void InitMap() {
+  game_state=0;
+  visit_count=0;
+  step_count=0;
+  mine_num=0;
+  init_adjacent();
+  std::string s;
+  //char s[100];
   std::cin >> rows >> columns;
-  // TODO (student): Implement me!
+  for (int i=1;i<=rows;i++){
+   // scanf("%s",&s);
+    std::cin>>s;
+    for (int j=1;j<=columns;j++)
+        if (s[j-1]=='.') mp[i][j].state=0;
+        else if (s[j-1]=='X') mp[i][j].state=1;
+  }
+  for (int i=1;i<=rows;i++)
+    for (int j=1;j<=columns;j++)
+    if (mp[i][j].state==0)
+      mp[i][j].num=calc_mines(i,j);
+    else mine_num++;
+  return;
 }
 
 /**
@@ -60,6 +106,35 @@ void InitMap() {
  *    -1 if the game ends and the player loses.
  */
 void VisitBlock(int row, int column) {  
+  step_count++;
+  row++;column++;
+  Point p1,p2;p1.x=row;p1.y=column;
+  if (mp[p1.x][p1.y].vis!=0) return;
+  
+  std::queue <Point> q;int Sta;
+  while (!q.empty()) q.pop();
+  q.push(p1);
+  mp[p1.x][p1.y].vis=1;
+  while (!q.empty()){
+    p1=q.front();q.pop();
+    Sta=mp[p1.x][p1.y].state;
+    if (Sta==0) {
+      visit_count++;
+      if (mp[p1.x][p1.y].num==0)
+        for (int i=1;i<=8;i++){
+          p2.x=p1.x+adjacent_x[i];
+          p2.y=p1.y+adjacent_y[i];
+          if (mp[p2.x][p2.y].vis==0 && mp[p2.x][p2.y].state!=-1){
+            mp[p2.x][p2.y].vis=1;
+            q.push(p2);
+          }
+        }
+    }else if (Sta==1){
+      game_state=-1;
+      return;
+    }
+  }
+  if (visit_count==rows*columns-mine_num) {game_state=1;}
   // TODO (student): Implement me!
 }
 
@@ -88,7 +163,22 @@ void VisitBlock(int row, int column) {
  * @note Use std::cout to print the game map, especially when you want to try the advanced task!!!
  */
 void PrintMap() {
-  // TODO (student): Implement me!
+  for (int i=1;i<=rows;i++){
+    for (int j=1;j<=columns;j++){
+      if (mp[i][j].vis==0){
+        if (game_state==1) std::cout<<'@';
+        else std::cout<<'?';
+      } 
+      else {
+        if (mp[i][j].state==1) 
+          std::cout<<'X';
+        else 
+          std::cout<<mp[i][j].num;
+      }
+    }
+    std::cout<<std::endl;
+  }
+  return;
 }
 
 /**
@@ -100,6 +190,11 @@ void PrintMap() {
  */
 void ExitGame() {
   // TODO (student): Implement me!
+  if (game_state==1)
+    std::cout<<"YOU WIN!"<<std::endl;
+  else
+    std::cout<<"GAME OVER!"<<std::endl;
+  std::cout<<visit_count<<' '<<step_count<<std::endl;
   exit(0); // Exit the game immediately
 }
 

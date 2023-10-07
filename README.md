@@ -128,7 +128,8 @@ Execute(row, column):
   VisitBlock(row, column)
   ReadMap() from result of PrintMap()
 ```
-因此，如你所见，你需要在 ReadMap 函数中读取有限的地图信息，并储存到一些全局变量中，随后根据这些地图信息做出下一步的决策，通过 `Execute` 再次发起决策。具体的代码结构逻辑可以参考 `advanced.cpp` 和 `client.cpp`，如果你不明白代码的实现方式，请立即询问助教！！！
+因此，如你所见，你需要在 ReadMap 函数中读取有限的地图信息，并储存到一些全局变量中，随后根据这些地图信息做出下一步的决策，通过 `Execute` 再次发起决策。具体的代码结构逻辑可以参考 `advanced.cpp` 和 `client.cpp`
+
 
 例如，若输入数据为
 ```
